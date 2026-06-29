@@ -17,6 +17,7 @@
       DANDANAPI_KEY: ${{ secrets.DANDANAPI_KEY }}
       KAZUMI_APPID: ${{ secrets.KAZUMI_APPID }}
       KAZUMI_KEY: ${{ secrets.KAZUMI_KEY }}
+      SIGNPATH_API_TOKEN: ${{ secrets.SIGNPATH_API_TOKEN }}
 
     jobs:
       flutter-test:
@@ -155,7 +156,7 @@
           # Sign Zip
           - run: New-Item -Path "build/windows/zip_signed_output" -ItemType Directory
           - name: sign windows zip
-            if: ${{ secrets.SIGNPATH_API_TOKEN != '' }}
+            if: env.SIGNPATH_API_TOKEN != ''
             uses: signpath/github-action-submit-signing-request@v1.1
             with:
               api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
@@ -168,7 +169,7 @@
               output-artifact-directory: 'build/windows/zip_signed_output'
           
           - name: fallback copy zip when no sign token
-            if: ${{ secrets.SIGNPATH_API_TOKEN == '' }}
+            if: env.SIGNPATH_API_TOKEN == ''
             run: Copy-Item -Path "Kazumi_windows_${env:tag}.zip" -Destination "build/windows/zip_signed_output/Kazumi_windows_${env:tag}.zip"
           
           - name: Upload windows zip signed ouputs
@@ -196,7 +197,7 @@
           # Sign MSIX
           - run: New-Item -Path "build/windows/msix_signed_output" -ItemType Directory
           - name: sign windows msix
-            if: ${{ secrets.SIGNPATH_API_TOKEN != '' }}
+            if: env.SIGNPATH_API_TOKEN != ''
             uses: signpath/github-action-submit-signing-request@v1.1
             with:
               api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
@@ -209,7 +210,7 @@
               output-artifact-directory: 'build/windows/msix_signed_output'
           
           - name: fallback copy msix when no sign token
-            if: ${{ secrets.SIGNPATH_API_TOKEN == '' }}
+            if: env.SIGNPATH_API_TOKEN == ''
             run: Copy-Item -Path "build/windows/x64/runner/Release/kazumi.msix" -Destination "build/windows/msix_signed_output/kazumi.msix"
           
           - name: Upload windows msix signed ouputs
