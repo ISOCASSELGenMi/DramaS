@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:kazumi/pages/my/my_controller.dart';
 import 'package:kazumi/services/sync/bangumi_sync_service.dart';
+import 'package:kazumi/services/sync/mal_sync_service.dart';
 import 'package:kazumi/services/sync/webdav.dart';
 import 'package:kazumi/services/storage/storage.dart';
 import 'package:kazumi/plugins/plugins_controller.dart';
@@ -48,6 +49,7 @@ class _InitPageState extends State<InitPage> {
     _loadDanmakuShield();
     _webDavInit();
     _bangumiInit();
+    _malInit();
     try {
       await downloadController.init();
       _setupBackgroundDownloadNavigation();
@@ -177,6 +179,27 @@ class _InitPageState extends State<InitPage> {
         );
         KazumiDialog.showToast(
           message: '初始化Bangumi失败，已关闭 Bangumi 同步: ${e.toString()}',
+        );
+      }
+    }
+  }
+
+  Future<void> _malInit() async {
+    bool malEnable = await GStorage.getSetting(SettingsKeys.malSyncEnable);
+    if (malEnable) {
+      var malSync = MalSyncService();
+      KazumiLogger().i('MAL: Starting MyAnimeList initialization');
+      try {
+        await malSync.init();
+      } catch (e) {
+        malSync.reset();
+        await GStorage.putSetting(SettingsKeys.malSyncEnable, false);
+        KazumiLogger().w(
+          'MAL: initialization failed, disabling MyAnimeList sync until user re-enables it',
+          error: e,
+        );
+        KazumiDialog.showToast(
+          message: '初始化 MyAnimeList 失敗，已關閉 MAL 同步: ${e.toString()}',
         );
       }
     }

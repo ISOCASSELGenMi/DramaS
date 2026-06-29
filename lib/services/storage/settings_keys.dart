@@ -461,6 +461,46 @@ class SettingsKeys {
     true,
     group: SettingGroup.bangumi,
   );
+  static const malSyncEnable = SettingKey<bool>(
+    _SettingBoxKey.malSyncEnable,
+    false,
+    group: SettingGroup.sync,
+  );
+  static const malAccessToken = SettingKey<String>(
+    _SettingBoxKey.malAccessToken,
+    '',
+    group: SettingGroup.sync,
+  );
+  static const malRefreshToken = SettingKey<String>(
+    _SettingBoxKey.malRefreshToken,
+    '',
+    group: SettingGroup.sync,
+  );
+  static const malTokenExpiry = SettingKey<int>(
+    _SettingBoxKey.malTokenExpiry,
+    0,
+    group: SettingGroup.sync,
+  );
+  static const malClientId = SettingKey<String>(
+    _SettingBoxKey.malClientId,
+    '',
+    group: SettingGroup.sync,
+  );
+  static const malSyncPriority = SettingKey<int>(
+    _SettingBoxKey.malSyncPriority,
+    0,
+    group: SettingGroup.sync,
+  );
+  static const malImmediateSyncToastEnable = SettingKey<bool>(
+    _SettingBoxKey.malImmediateSyncToastEnable,
+    true,
+    group: SettingGroup.sync,
+  );
+  static const malUsername = SettingKey<String>(
+    _SettingBoxKey.malUsername,
+    '',
+    group: SettingGroup.sync,
+  );
   static const brightnessVolumeGesture = SettingKey<bool>(
     _SettingBoxKey.brightnessVolumeGesture,
     true,
@@ -582,6 +622,14 @@ class SettingsKeys {
     bangumiAccessToken,
     bangumiSyncPriority,
     bangumiImmediateSyncToastEnable,
+    malSyncEnable,
+    malAccessToken,
+    malRefreshToken,
+    malTokenExpiry,
+    malClientId,
+    malSyncPriority,
+    malImmediateSyncToastEnable,
+    malUsername,
     brightnessVolumeGesture,
     historySyncDeviceId,
     historySyncSequence,
@@ -692,6 +740,14 @@ class _SettingBoxKey {
       bangumiAccessToken = 'bangumiAccessToken',
       bangumiSyncPriority = 'bangumiSyncPriority',
       bangumiImmediateSyncToastEnable = 'bangumiImmediateSyncToastEnable',
+      malSyncEnable = 'malSyncEnable',
+      malAccessToken = 'malAccessToken',
+      malRefreshToken = 'malRefreshToken',
+      malTokenExpiry = 'malTokenExpiry',
+      malClientId = 'malClientId',
+      malSyncPriority = 'malSyncPriority',
+      malImmediateSyncToastEnable = 'malImmediateSyncToastEnable',
+      malUsername = 'malUsername',
       brightnessVolumeGesture = 'brightnessVolumeGesture',
       historySyncDeviceId = 'historySyncDeviceId',
       historySyncSequence = 'historySyncSequence',

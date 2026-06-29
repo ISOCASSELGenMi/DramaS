@@ -6,6 +6,7 @@ import 'package:kazumi/modules/bangumi/bangumi_item.dart';
 import 'package:kazumi/modules/collect/collect_module.dart';
 import 'package:kazumi/modules/collect/collect_type.dart';
 import 'package:kazumi/services/sync/bangumi_sync_service.dart';
+import 'package:kazumi/services/sync/mal_sync_service.dart';
 import 'package:kazumi/services/storage/storage.dart';
 import 'package:kazumi/services/sync/webdav.dart';
 import 'package:kazumi/repositories/collect_crud_repository.dart';
@@ -64,6 +65,15 @@ abstract class _CollectController with Store {
       return;
     }
 
+    // 同步到 MyAnimeList (如果啟用)
+    final bool malSyncSucceeded = await _syncMalCollectIfEnabled(
+      bangumiItem.id,
+      type,
+    );
+    if (!malSyncSucceeded) {
+      return;
+    }
+
     final int currentCollectType = getCollectType(bangumiItem);
     final int collectChangeAction = currentCollectType == 0 ? 1 : 2;
 
@@ -105,6 +115,9 @@ abstract class _CollectController with Store {
   }
 
   Future<void> _deleteCollectLocally(BangumiItem bangumiItem) async {
+    // 同步刪除 MyAnimeList (傳入 type = 0 代表刪除)
+    await _syncMalCollectIfEnabled(bangumiItem.id, 0);
+
     await _collectCrudRepository.deleteCollectible(bangumiItem.id);
     await GStorage.appendCollectChange(
       bangumiId: bangumiItem.id,
@@ -206,6 +219,56 @@ abstract class _CollectController with Store {
       KazumiDialog.showToast(message: '同步到 Bangumi 失败，已取消本次状态修改: $e');
       KazumiLogger().e(
         'Bangumi: immediate collect sync failed. bangumiId=$bangumiId, type=$localType',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      return false;
+    }
+  }
+
+  Future<bool> _syncMalCollectIfEnabled(int bangumiId, int localType) async {
+    final bool syncEnable = GStorage.getSetting(SettingsKeys.malSyncEnable);
+    final bool showImmediateSyncToast =
+        GStorage.getSetting(SettingsKeys.malImmediateSyncToastEnable);
+
+    if (!syncEnable) {
+      return true;
+    }
+
+    final malSync = MalSyncService();
+    if (!malSync.initialized) {
+      try {
+        await malSync.init();
+      } catch (e) {
+        KazumiDialog.showToast(message: 'MyAnimeList 未初始化，同步失敗，已取消本次狀態修改');
+        KazumiLogger().w(
+          'MAL Sync: immediate collect sync skipped because MAL is not initialized. '
+          'bangumiId=$bangumiId, type=$localType',
+        );
+        return false;
+      }
+    }
+    try {
+      if (showImmediateSyncToast) {
+        KazumiDialog.showToast(message: '正在同步到 MyAnimeList...');
+      }
+      final bool synced =
+          await malSync.syncCollectibleWhenIdle(bangumiId, localType);
+      if (synced && showImmediateSyncToast) {
+        KazumiDialog.showToast(message: '已同步到 MyAnimeList');
+        return true;
+      } else if (!synced) {
+        KazumiDialog.showToast(message: '同步到 MyAnimeList 失敗，已取消本次狀態修改');
+        KazumiLogger().w(
+          'MAL Sync: immediate collect sync did not complete. bangumiId=$bangumiId, type=$localType',
+        );
+        return false;
+      }
+      return true;
+    } catch (e, stackTrace) {
+      KazumiDialog.showToast(message: '同步到 MyAnimeList 失敗，已取消本次狀態修改: $e');
+      KazumiLogger().e(
+        'MAL Sync: immediate collect sync failed. bangumiId=$bangumiId, type=$localType',
         error: e,
         stackTrace: stackTrace,
       );

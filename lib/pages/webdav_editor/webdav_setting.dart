@@ -22,6 +22,7 @@ class _PlayerSettingsPageState extends State<WebDavSettingsPage> {
   late bool enableGitProxy;
   late bool enableBangumiProxy;
   late bool bangumiSyncEnable;
+  late bool malSyncEnable;
 
   @override
   void initState() {
@@ -32,6 +33,7 @@ class _PlayerSettingsPageState extends State<WebDavSettingsPage> {
     enableGitProxy = GStorage.getSetting(SettingsKeys.enableGitProxy);
     enableBangumiProxy = GStorage.getSetting(SettingsKeys.enableBangumiProxy);
     bangumiSyncEnable = GStorage.getSetting(SettingsKeys.bangumiSyncEnable);
+    malSyncEnable = GStorage.getSetting(SettingsKeys.malSyncEnable);
   }
 
   void onBackPressed(BuildContext context) {
@@ -157,10 +159,50 @@ class _PlayerSettingsPageState extends State<WebDavSettingsPage> {
                   onPressed: (_) async {
                     await Modular.to.pushNamed('/settings/bangumi/');
                     bangumiSyncEnable =
-                        GStorage.getSetting(SettingsKeys.bangumiSyncEnable);
+                      GStorage.getSetting(SettingsKeys.bangumiSyncEnable);
                     setState(() {});
                   },
                   title: Text('Bangumi 配置',
+                      style: TextStyle(fontFamily: fontFamily)),
+                ),
+              ],
+            ),
+            SettingsSection(
+              title: Text('MyAnimeList', style: TextStyle(fontFamily: fontFamily)),
+              tiles: [
+                SettingsTile.switchTile(
+                  onToggle: (value) async {
+                    final tMalSyncEnable = value ?? !malSyncEnable;
+                    if (tMalSyncEnable == true) {
+                      final token =
+                          GStorage.getSetting(SettingsKeys.malAccessToken)
+                              .trim();
+                      if (token.isEmpty) {
+                        KazumiDialog.showToast(message: '請先配置 MyAnimeList 帳號授權');
+                        return;
+                      }
+                    }
+                    malSyncEnable = tMalSyncEnable;
+                    await GStorage.putSetting(
+                        SettingsKeys.malSyncEnable, malSyncEnable);
+                    if (mounted) {
+                      setState(() {});
+                    }
+                  },
+                  title: Text('MyAnimeList 同步',
+                      style: TextStyle(fontFamily: fontFamily)),
+                  description: Text('允許與 MyAnimeList 自動同步收藏/追番狀態與觀看進度',
+                      style: TextStyle(fontFamily: fontFamily)),
+                  initialValue: malSyncEnable,
+                ),
+                SettingsTile.navigation(
+                  onPressed: (_) async {
+                    await Modular.to.pushNamed('/settings/mal/');
+                    malSyncEnable =
+                        GStorage.getSetting(SettingsKeys.malSyncEnable);
+                    setState(() {});
+                  },
+                  title: Text('MyAnimeList 配置',
                       style: TextStyle(fontFamily: fontFamily)),
                 ),
               ],

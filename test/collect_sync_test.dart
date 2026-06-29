@@ -17,6 +17,7 @@ void main() {
         webDavEnabled: true,
         webDavCollectiblesEnabled: false,
         bangumiEnabled: false,
+        malEnabled: false,
       );
 
       expect(plan.shouldSyncWebDavCollectibles, isFalse);
@@ -29,6 +30,7 @@ void main() {
         webDavEnabled: true,
         webDavCollectiblesEnabled: false,
         bangumiEnabled: true,
+        malEnabled: false,
       );
 
       expect(plan.shouldSyncWebDavCollectibles, isFalse);
@@ -41,6 +43,7 @@ void main() {
         webDavEnabled: true,
         webDavCollectiblesEnabled: true,
         bangumiEnabled: false,
+        malEnabled: false,
       );
 
       expect(plan.shouldSyncWebDavCollectibles, isTrue);
@@ -53,6 +56,7 @@ void main() {
         webDavEnabled: true,
         webDavCollectiblesEnabled: true,
         bangumiEnabled: true,
+        malEnabled: false,
       );
 
       expect(

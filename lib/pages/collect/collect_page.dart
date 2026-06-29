@@ -14,6 +14,7 @@ import 'package:provider/provider.dart';
 import 'package:kazumi/bean/widget/collect_button.dart';
 import 'package:kazumi/modules/collect/collect_sync_plan.dart';
 import 'package:kazumi/services/storage/storage.dart';
+import 'package:kazumi/services/sync/mal_sync_service.dart';
 
 class CollectPage extends StatefulWidget {
   const CollectPage({super.key});
@@ -48,6 +49,31 @@ class _CollectPageState extends State<CollectPage>
     );
   }
 
+  Future<bool> _syncMalWithProgress({
+    required GlobalKey<_FullSyncProgressDialogState> progressDialogKey,
+  }) async {
+    progressDialogKey.currentState?.update('准备同步 MyAnimeList 收藏...', null);
+
+    await Future<void>.delayed(const Duration(milliseconds: 80));
+
+    try {
+      final malSync = MalSyncService();
+      await malSync.ping();
+      await malSync.syncCollectibles(
+        onProgress: (message, current, total) {
+          progressDialogKey.currentState?.update(
+            total > 0 ? '$message ($current/$total)' : message,
+            total > 0 ? (current / total).clamp(0.0, 1.0).toDouble() : null,
+          );
+        },
+      );
+      return true;
+    } catch (e) {
+      KazumiLogger().e('MAL: full sync failed in UI', error: e);
+      return false;
+    }
+  }
+
   void _showFullSyncProgressDialog({
     required GlobalKey<_FullSyncProgressDialogState> progressDialogKey,
   }) {
@@ -61,6 +87,7 @@ class _CollectPageState extends State<CollectPage>
     required CollectSyncPlan plan,
     required bool webDavSynced,
     required bool bangumiSynced,
+    required bool malSynced,
     required bool webDavUploaded,
   }) {
     final List<String> states = [];
@@ -70,10 +97,13 @@ class _CollectPageState extends State<CollectPage>
     if (plan.shouldSyncBangumi) {
       states.add(bangumiSynced ? 'Bangumi 已同步' : 'Bangumi 未完成');
     }
+    if (plan.shouldSyncMal) {
+      states.add(malSynced ? 'MyAnimeList 已同步' : 'MyAnimeList 未完成');
+    }
     if (plan.shouldSyncWebDavCollectibles &&
-        plan.shouldSyncBangumi &&
+        (plan.shouldSyncBangumi || plan.shouldSyncMal) &&
         webDavSynced &&
-        bangumiSynced) {
+        (bangumiSynced || malSynced)) {
       states.add(webDavUploaded ? 'WebDav 已回传最新数据' : 'WebDav 未回传最新数据');
     }
     return states.join('，');
@@ -92,6 +122,7 @@ class _CollectPageState extends State<CollectPage>
 
     bool webDavSynced = false;
     bool bangumiSynced = false;
+    bool malSynced = false;
     bool webDavUploaded = false;
 
     try {
@@ -107,10 +138,18 @@ class _CollectPageState extends State<CollectPage>
         );
       }
 
-      if (plan.shouldUploadWebDavAfterBangumi(
-        webDavSynced: webDavSynced,
-        bangumiSynced: bangumiSynced,
-      )) {
+      if (plan.shouldSyncMal) {
+        malSynced = await _syncMalWithProgress(
+          progressDialogKey: progressDialogKey,
+        );
+      }
+
+      // 如果有開啟 WebDav 同步且 remote 端 (Bangumi 或 MAL) 同步成功，則把結果回傳到 WebDav
+      final shouldUpload = plan.shouldSyncWebDavCollectibles &&
+          webDavSynced &&
+          ((plan.shouldSyncBangumi && bangumiSynced) || (plan.shouldSyncMal && malSynced));
+
+      if (shouldUpload) {
         progressDialogKey.currentState?.update('正在回传最新收藏到 WebDav...', null);
         webDavUploaded = await collectController.uploadCollectiblesToWebDav(
           showSuccessToast: false,
@@ -127,6 +166,7 @@ class _CollectPageState extends State<CollectPage>
         plan: plan,
         webDavSynced: webDavSynced,
         bangumiSynced: bangumiSynced,
+        malSynced: malSynced,
         webDavUploaded: webDavUploaded,
       ),
     );
@@ -210,10 +250,13 @@ class _CollectPageState extends State<CollectPage>
                 GStorage.getSetting(SettingsKeys.webDavEnableCollect);
             bool bgmSyncEnable =
                 GStorage.getSetting(SettingsKeys.bangumiSyncEnable);
+            bool malSyncEnable =
+                GStorage.getSetting(SettingsKeys.malSyncEnable);
             final syncPlan = CollectSyncPlan(
               webDavEnabled: webDavenable,
               webDavCollectiblesEnabled: webDavCollectEnable,
               bangumiEnabled: bgmSyncEnable,
+              malEnabled: malSyncEnable,
             );
             if (!syncPlan.canSync) {
               KazumiDialog.showToast(message: '同步功能不可用，请至少开启一个同步功能');

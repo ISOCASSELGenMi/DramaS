@@ -3,6 +3,7 @@ import 'package:kazumi/services/storage/storage.dart';
 import 'package:kazumi/modules/bangumi/bangumi_item.dart';
 import 'package:kazumi/modules/history/history_module.dart';
 import 'package:kazumi/services/sync/history_sync_service.dart';
+import 'package:kazumi/services/sync/mal_sync_service.dart';
 import 'package:kazumi/services/logging/logger.dart';
 
 typedef HistoryProgressSyncAppender = Future<void> Function({
@@ -278,6 +279,11 @@ class HistoryRepository implements IHistoryRepository {
         progressMs: progress.inMilliseconds,
         updatedAt: nowMs,
       );
+      // 同步進度到 MyAnimeList (如果啟用且為線上來源)
+      if (HistoryEntryKind.normalize(identity.entryKind) == HistoryEntryKind.online) {
+        final malSync = MalSyncService();
+        await malSync.syncEpisodeProgress(bangumiItem.id, episode);
+      }
     } catch (e, stackTrace) {
       KazumiLogger().e(
         'GStorage: update history failed. bangumi=${identity.bangumiItem.name}, episode=${identity.episodeNumber}',

@@ -341,6 +341,14 @@ class GStorage {
     await _setting.put(key.name, value);
   }
 
+  static dynamic getSettingRaw(String name) {
+    return _setting.get(name);
+  }
+
+  static Future<void> putSettingRaw(String name, dynamic value) async {
+    await _setting.put(name, value);
+  }
+
   static List<String> getStringListSettingByName(
     String key, {
     List<String> defaultValue = const [],
