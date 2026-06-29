@@ -4,6 +4,7 @@
 // 建立及快取動漫 ID 的關聯，保證同步的一致性與防範請求限流。
 import 'dart:async';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
+import 'package:kazumi/modules/collect/collect_module.dart';
 import 'package:kazumi/modules/collect/collect_type.dart';
 import 'package:kazumi/modules/mal/mal_collection_type.dart';
 import 'package:kazumi/modules/mal/mal_sync_priority.dart';
