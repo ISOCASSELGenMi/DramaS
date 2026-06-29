@@ -155,6 +155,7 @@
           # Sign Zip
           - run: New-Item -Path "build/windows/zip_signed_output" -ItemType Directory
           - name: sign windows zip
+            if: ${{ secrets.SIGNPATH_API_TOKEN != '' }}
             uses: signpath/github-action-submit-signing-request@v1.1
             with:
               api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
@@ -166,13 +167,17 @@
               wait-for-completion: true
               output-artifact-directory: 'build/windows/zip_signed_output'
           
+          - name: fallback copy zip when no sign token
+            if: ${{ secrets.SIGNPATH_API_TOKEN == '' }}
+            run: Copy-Item -Path "Kazumi_windows_${env:tag}.zip" -Destination "build/windows/zip_signed_output/Kazumi_windows_${env:tag}.zip"
+          
           - name: Upload windows zip signed ouputs
             uses: actions/upload-artifact@v4
             id: signed-windows-zip-artifacts
             with:
               name: windows_zip_signed_outputs
               path: build/windows/zip_signed_output/*.zip
-              
+               
           # Replace Unpacked Artifact with Signed Artifact
           - name: Replace Unpacked Artifact with Signed Artifact
             run: Expand-Archive -Path "build/windows/zip_signed_output/Kazumi_windows_${env:tag}.zip" -DestinationPath "build/windows/x64/runner/Release" -Force
@@ -191,6 +196,7 @@
           # Sign MSIX
           - run: New-Item -Path "build/windows/msix_signed_output" -ItemType Directory
           - name: sign windows msix
+            if: ${{ secrets.SIGNPATH_API_TOKEN != '' }}
             uses: signpath/github-action-submit-signing-request@v1.1
             with:
               api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
@@ -202,9 +208,13 @@
               wait-for-completion: true
               output-artifact-directory: 'build/windows/msix_signed_output'
           
+          - name: fallback copy msix when no sign token
+            if: ${{ secrets.SIGNPATH_API_TOKEN == '' }}
+            run: Copy-Item -Path "build/windows/x64/runner/Release/kazumi.msix" -Destination "build/windows/msix_signed_output/kazumi.msix"
+          
           - name: Upload windows msix signed ouputs
             uses: actions/upload-artifact@v4
-            id: signed-windows-msix-artifacts
+            id: signed-windows-artifacts
             with:
               name: windows_msix_signed_outputs
               path: build/windows/msix_signed_output/*.msix
