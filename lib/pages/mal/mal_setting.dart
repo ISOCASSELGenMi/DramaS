@@ -22,6 +22,8 @@ class MalEditorPage extends StatefulWidget {
 class _MalEditorPageState extends State<MalEditorPage> {
   final TextEditingController malClientIdController = TextEditingController();
   final TextEditingController authCodeController = TextEditingController();
+  final TextEditingController malAccessTokenController = TextEditingController();
+  final TextEditingController malRefreshTokenController = TextEditingController();
   bool isVerifying = false;
   late bool malImmediateSyncToastEnable;
   late int syncPriority;
@@ -57,6 +59,8 @@ class _MalEditorPageState extends State<MalEditorPage> {
   void dispose() {
     malClientIdController.dispose();
     authCodeController.dispose();
+    malAccessTokenController.dispose();
+    malRefreshTokenController.dispose();
     super.dispose();
   }
 
@@ -127,51 +131,71 @@ class _MalEditorPageState extends State<MalEditorPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (!isLoggedIn) ...[
-                  Text(
-                    '授權步驟：'.t,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: malClientIdController,
-                    decoration: InputDecoration(
-                      labelText: '自訂 Client ID (可空，留空將使用預設 ID)'.t,
-                      border: const OutlineInputBorder(),
+                    Text(
+                      '授權步驟：'.t,
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
-                    onChanged: (val) async {
-                      await GStorage.putSetting(SettingsKeys.malClientId, val.trim());
-                    },
-                  ),
+                    const SizedBox(height: 12),
+                    Text(
+                      '注意：預設 Client ID 可能已失效。強烈建議您自己註冊一個 Client ID：'.t,
+                      style: const TextStyle(fontSize: 13, color: Colors.orange),
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () async {
+                          final url = Uri.parse('https://myanimelist.net/apiconfig');
+                          if (await canLaunchUrl(url)) {
+                            await launchUrl(url, mode: LaunchMode.externalApplication);
+                          }
+                        },
+                        icon: const Icon(Icons.link_rounded),
+                        label: Text('點此前往 MyAnimeList App 註冊頁面'.t),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: malClientIdController,
+                      decoration: InputDecoration(
+                        labelText: '自訂 Client ID (可空，留空將使用預設 ID)'.t,
+                        border: const OutlineInputBorder(),
+                        helperText: 'Redirect URI 請填寫 http://localhost'.t,
+                      ),
+                      onChanged: (val) async {
+                        await GStorage.putSetting(SettingsKeys.malClientId, val.trim());
+                      },
+                    ),
                     const SizedBox(height: 16),
                     SizedBox(
                       width: double.infinity,
                       height: 50,
-                    child: FilledButton.icon(
-                      onPressed: () async {
-                        final url = Uri.parse(MalAuthService().getAuthorizationUrl());
-                        if (await canLaunchUrl(url)) {
-                          await launchUrl(url, mode: LaunchMode.externalApplication);
-                        } else {
-                          KazumiDialog.showToast(message: '無法開啟授權連結'.t);
-                        }
-                      },
-                      icon: const Icon(Icons.open_in_browser_rounded),
-                      label: Text('1. 前往 MyAnimeList 進行網頁授權'.t),
+                      child: FilledButton.icon(
+                        onPressed: () async {
+                          final url = Uri.parse(MalAuthService().getAuthorizationUrl());
+                          if (await canLaunchUrl(url)) {
+                            await launchUrl(url, mode: LaunchMode.externalApplication);
+                          } else {
+                            KazumiDialog.showToast(message: '無法開啟授權連結'.t);
+                          }
+                        },
+                        icon: const Icon(Icons.open_in_browser_rounded),
+                        label: Text('1. 前往 MyAnimeList 進行網頁授權'.t),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    '授權同意後，瀏覽器將轉跳至本地頁面（顯示無法連線是正常的）。請複製網址列中 `code=` 後方的代碼貼在下方輸入框：'.t,
-                    style: const TextStyle(fontSize: 13, color: Colors.grey),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: authCodeController,
-                    decoration: InputDecoration(
-                      labelText: '2. 輸入網址中的 Authorization Code'.t,
-                      border: const OutlineInputBorder(),
+                    const SizedBox(height: 16),
+                    Text(
+                      '授權同意後，瀏覽器將轉跳至本地頁面（顯示無法連線是正常的）。請複製網址列中 `code=` 後方的代碼貼在下方輸入框：'.t,
+                      style: const TextStyle(fontSize: 13, color: Colors.grey),
                     ),
-                  ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: authCodeController,
+                      decoration: InputDecoration(
+                        labelText: '2. 輸入網址中的 Authorization Code'.t,
+                        border: const OutlineInputBorder(),
+                      ),
+                    ),
                     const SizedBox(height: 16),
                     SizedBox(
                       width: double.infinity,
@@ -217,6 +241,72 @@ class _MalEditorPageState extends State<MalEditorPage> {
                               },
                         child: Text('3. 驗證並登入'.t),
                       ),
+                    ),
+                    const SizedBox(height: 24),
+                    ExpansionTile(
+                      title: Text('進階：手動貼入 Token 授權'.t),
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8.0),
+                          child: Column(
+                            children: [
+                              TextField(
+                                controller: malAccessTokenController,
+                                decoration: InputDecoration(
+                                  labelText: 'Access Token'.t,
+                                  border: const OutlineInputBorder(),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              TextField(
+                                controller: malRefreshTokenController,
+                                decoration: InputDecoration(
+                                  labelText: 'Refresh Token (選填)'.t,
+                                  border: const OutlineInputBorder(),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              SizedBox(
+                                width: double.infinity,
+                                height: 45,
+                                child: OutlinedButton(
+                                  onPressed: () async {
+                                    final token = malAccessTokenController.text.trim();
+                                    final refresh = malRefreshTokenController.text.trim();
+                                    if (token.isEmpty) {
+                                      KazumiDialog.showToast(message: 'Access Token 不能為空'.t);
+                                      return;
+                                    }
+                                    
+                                    await GStorage.putSetting(SettingsKeys.malAccessToken, token);
+                                    await GStorage.putSetting(SettingsKeys.malRefreshToken, refresh);
+                                    await GStorage.putSetting(
+                                      SettingsKeys.malTokenExpiry,
+                                      DateTime.now().add(const Duration(days: 30)).millisecondsSinceEpoch,
+                                    );
+                                    
+                                    KazumiDialog.showToast(message: '正在驗證 Token...'.t);
+                                    try {
+                                      final malSync = MalSyncService();
+                                      await malSync.init();
+                                      await GStorage.putSetting(SettingsKeys.malSyncEnable, true);
+                                      KazumiDialog.showToast(message: '${'驗證成功，用戶名：'.t}${malSync.username}');
+                                      if (mounted) {
+                                        setState(() {
+                                          _checkLoginStatus();
+                                        });
+                                      }
+                                    } catch (e) {
+                                      KazumiDialog.showToast(message: '${'Token 驗證失敗: '.t}$e');
+                                    }
+                                  },
+                                  child: Text('儲存並驗證登入'.t),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ] else ...[
                     Card(
