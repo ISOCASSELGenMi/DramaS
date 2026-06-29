@@ -99,6 +99,10 @@ class _AppWidgetState extends State<AppWidget>
       GStorage.getSetting(SettingsKeys.useSystemFont),
       notify: false,
     );
+    themeProvider.setLanguage(
+      GStorage.getSetting(SettingsKeys.language),
+      notify: false,
+    );
 
     final color = _storedThemeColor();
     final oledEnhance = GStorage.getSetting(SettingsKeys.oledEnhance);
@@ -339,10 +343,17 @@ class _AppWidgetState extends State<AppWidget>
           localizationsDelegates: GlobalMaterialLocalizations.delegates,
           supportedLocales: const [
             Locale.fromSubtags(
-                languageCode: 'zh', scriptCode: 'Hans', countryCode: "CN")
+                languageCode: 'zh', scriptCode: 'Hans', countryCode: "CN"),
+            Locale.fromSubtags(
+                languageCode: 'zh', scriptCode: 'Hant', countryCode: "TW"),
+            Locale.fromSubtags(
+                languageCode: 'zh', scriptCode: 'Hant', countryCode: "HK"),
           ],
-          locale: const Locale.fromSubtags(
-              languageCode: 'zh', scriptCode: 'Hans', countryCode: "CN"),
+          locale: themeProvider.currentLanguage == 'zh_TW'
+              ? const Locale.fromSubtags(
+                  languageCode: 'zh', scriptCode: 'Hant', countryCode: "TW")
+              : const Locale.fromSubtags(
+                  languageCode: 'zh', scriptCode: 'Hans', countryCode: "CN"),
           theme: lightTheme,
           darkTheme: effectiveDarkTheme,
           themeMode: themeProvider.themeMode,

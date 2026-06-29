@@ -4,6 +4,7 @@ import 'package:kazumi/bean/widget/embedded_native_control_area.dart';
 import 'package:kazumi/pages/router.dart';
 import 'package:kazumi/services/storage/storage.dart';
 import 'package:provider/provider.dart';
+import 'package:kazumi/utils/translate_extension.dart';
 
 class ScaffoldMenu extends StatefulWidget {
   const ScaffoldMenu({super.key});
@@ -93,26 +94,26 @@ class _ScaffoldMenu extends State<ScaffoldMenu> {
         bottomNavigationBar: state.isHide
             ? const SizedBox(height: 0)
             : NavigationBar(
-                destinations: const <Widget>[
+                destinations: <Widget>[
                   NavigationDestination(
-                    selectedIcon: Icon(Icons.home),
-                    icon: Icon(Icons.home_outlined),
-                    label: '推荐',
+                    selectedIcon: const Icon(Icons.home),
+                    icon: const Icon(Icons.home_outlined),
+                    label: '推荐'.t,
                   ),
                   NavigationDestination(
-                    selectedIcon: Icon(Icons.timeline),
-                    icon: Icon(Icons.timeline_outlined),
-                    label: '时间表',
+                    selectedIcon: const Icon(Icons.timeline),
+                    icon: const Icon(Icons.timeline_outlined),
+                    label: '时间表'.t,
                   ),
                   NavigationDestination(
-                    selectedIcon: Icon(Icons.favorite),
-                    icon: Icon(Icons.favorite_outlined),
-                    label: '追番',
+                    selectedIcon: const Icon(Icons.favorite),
+                    icon: const Icon(Icons.favorite_outlined),
+                    label: '追番'.t,
                   ),
                   NavigationDestination(
-                    selectedIcon: Icon(Icons.settings),
-                    icon: Icon(Icons.settings),
-                    label: '我的',
+                    selectedIcon: const Icon(Icons.settings),
+                    icon: const Icon(Icons.settings),
+                    label: '我的'.t,
                   ),
                 ],
                 selectedIndex: state.selectedIndex,
@@ -143,26 +144,26 @@ class _ScaffoldMenu extends State<ScaffoldMenu> {
                   child: const Icon(Icons.search),
                 ),
                 labelType: NavigationRailLabelType.selected,
-                destinations: const <NavigationRailDestination>[
+                destinations: <NavigationRailDestination>[
                   NavigationRailDestination(
-                    selectedIcon: Icon(Icons.home),
-                    icon: Icon(Icons.home_outlined),
-                    label: Text('推荐'),
+                    selectedIcon: const Icon(Icons.home),
+                    icon: const Icon(Icons.home_outlined),
+                    label: Text('推荐'.t),
                   ),
                   NavigationRailDestination(
-                    selectedIcon: Icon(Icons.timeline),
-                    icon: Icon(Icons.timeline_outlined),
-                    label: Text('时间表'),
+                    selectedIcon: const Icon(Icons.timeline),
+                    icon: const Icon(Icons.timeline_outlined),
+                    label: Text('时间表'.t),
                   ),
                   NavigationRailDestination(
-                    selectedIcon: Icon(Icons.favorite),
-                    icon: Icon(Icons.favorite_border),
-                    label: Text('追番'),
+                    selectedIcon: const Icon(Icons.favorite),
+                    icon: const Icon(Icons.favorite_border),
+                    label: Text('追番'.t),
                   ),
                   NavigationRailDestination(
-                    selectedIcon: Icon(Icons.settings),
-                    icon: Icon(Icons.settings_outlined),
-                    label: Text('我的'),
+                    selectedIcon: const Icon(Icons.settings),
+                    icon: const Icon(Icons.settings_outlined),
+                    label: Text('我的'.t),
                   ),
                 ],
                 selectedIndex: state.selectedIndex,

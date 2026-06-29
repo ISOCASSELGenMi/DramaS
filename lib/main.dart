@@ -54,7 +54,11 @@ void main() async {
         localizationsDelegates: GlobalMaterialLocalizations.delegates,
         supportedLocales: const [
           Locale.fromSubtags(
-              languageCode: 'zh', scriptCode: 'Hans', countryCode: "CN")
+              languageCode: 'zh', scriptCode: 'Hans', countryCode: "CN"),
+          Locale.fromSubtags(
+              languageCode: 'zh', scriptCode: 'Hant', countryCode: "TW"),
+          Locale.fromSubtags(
+              languageCode: 'zh', scriptCode: 'Hant', countryCode: "HK"),
         ],
         locale: const Locale.fromSubtags(
             languageCode: 'zh', scriptCode: 'Hans', countryCode: "CN"),

@@ -2,8 +2,12 @@ import 'package:card_settings_ui/list/settings_list.dart';
 import 'package:card_settings_ui/section/settings_section.dart';
 import 'package:card_settings_ui/tile/settings_tile.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:kazumi/bean/appbar/sys_app_bar.dart';
 import 'package:kazumi/services/storage/storage.dart';
+import 'package:kazumi/services/storage/settings_keys.dart';
+import 'package:kazumi/bean/settings/theme_provider.dart';
+import 'package:kazumi/utils/translate_extension.dart';
 
 class InterfaceSettingsPage extends StatefulWidget {
   const InterfaceSettingsPage({super.key});
@@ -16,7 +20,9 @@ class _InterfaceSettingsPageState extends State<InterfaceSettingsPage> {
   late bool showRating;
   late bool showAnimeCounter;
   late String defaultPage;
+  late String currentLanguage;
   final MenuController defaultPageMenuController = MenuController();
+  final MenuController languageMenuController = MenuController();
 
   static const Map<String, String> defaultPageMap = {
     '/tab/popular/': '推荐',
@@ -25,12 +31,18 @@ class _InterfaceSettingsPageState extends State<InterfaceSettingsPage> {
     '/tab/my/': '我的',
   };
 
+  static const Map<String, String> languageMap = {
+    'zh_CN': '简体中文',
+    'zh_TW': '繁體中文',
+  };
+
   @override
   void initState() {
     super.initState();
     showRating = GStorage.getSetting(SettingsKeys.showRating);
     showAnimeCounter = GStorage.getSetting(SettingsKeys.showAnimeCounter);
     defaultPage = GStorage.getSetting(SettingsKeys.defaultStartupPage);
+    currentLanguage = GStorage.getSetting(SettingsKeys.language);
   }
 
   void updateDefaultPage(String page) {
@@ -40,13 +52,22 @@ class _InterfaceSettingsPageState extends State<InterfaceSettingsPage> {
     });
   }
 
+  void updateLanguage(String lang) {
+    GStorage.putSetting(SettingsKeys.language, lang);
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    themeProvider.setLanguage(lang);
+    setState(() {
+      currentLanguage = lang;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final fontFamily = Theme.of(context).textTheme.bodyMedium?.fontFamily;
 
     return Scaffold(
       appBar: SysAppBar(
-        title: Text('界面设置'),
+        title: Text('界面设置'.t),
       ),
       body: SettingsList(
         sections: [
@@ -59,15 +80,15 @@ class _InterfaceSettingsPageState extends State<InterfaceSettingsPage> {
                   defaultPageMenuController.open();
                 }
               },
-              title: Text('启动界面设置', style: TextStyle(fontFamily: fontFamily)),
-              description: Text('设置应用开启时的默认页面',
+              title: Text('启动界面设置'.t, style: TextStyle(fontFamily: fontFamily)),
+              description: Text('设置应用开启时的默认页面'.t,
                   style: TextStyle(fontFamily: fontFamily)),
               value: MenuAnchor(
                 consumeOutsideTap: true,
                 controller: defaultPageMenuController,
                 builder: (_, __, ___) {
                   return Text(
-                    defaultPageMap[defaultPage] ?? '推荐',
+                    (defaultPageMap[defaultPage] ?? '推荐').t,
                     style: TextStyle(fontFamily: fontFamily),
                   );
                 },
@@ -82,9 +103,56 @@ class _InterfaceSettingsPageState extends State<InterfaceSettingsPage> {
                         child: Align(
                           alignment: Alignment.centerLeft,
                           child: Text(
-                            entry.value,
+                            entry.value.t,
                             style: TextStyle(
                               color: entry.key == defaultPage
+                                  ? Theme.of(context).colorScheme.primary
+                                  : null,
+                              fontFamily: fontFamily,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ]),
+          SettingsSection(tiles: [
+            SettingsTile.navigation(
+              onPressed: (_) async {
+                if (languageMenuController.isOpen) {
+                  languageMenuController.close();
+                } else {
+                  languageMenuController.open();
+                }
+              },
+              title: Text('语言设置'.t, style: TextStyle(fontFamily: fontFamily)),
+              description: Text('选择应用的介面显示语言'.t,
+                  style: TextStyle(fontFamily: fontFamily)),
+              value: MenuAnchor(
+                consumeOutsideTap: true,
+                controller: languageMenuController,
+                builder: (_, __, ___) {
+                  return Text(
+                    (languageMap[currentLanguage] ?? '简体中文').t,
+                    style: TextStyle(fontFamily: fontFamily),
+                  );
+                },
+                menuChildren: [
+                  for (final entry in languageMap.entries)
+                    MenuItemButton(
+                      requestFocusOnHover: false,
+                      onPressed: () => updateLanguage(entry.key),
+                      child: Container(
+                        height: 48,
+                        constraints: BoxConstraints(minWidth: 112),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            entry.value.t,
+                            style: TextStyle(
+                              color: entry.key == currentLanguage
                                   ? Theme.of(context).colorScheme.primary
                                   : null,
                               fontFamily: fontFamily,
@@ -104,8 +172,8 @@ class _InterfaceSettingsPageState extends State<InterfaceSettingsPage> {
                 await GStorage.putSetting(SettingsKeys.showRating, showRating);
                 setState(() {});
               },
-              title: Text('显示评分', style: TextStyle(fontFamily: fontFamily)),
-              description: Text('关闭后将在概览中隐藏评分信息',
+              title: Text('显示评分'.t, style: TextStyle(fontFamily: fontFamily)),
+              description: Text('关闭后将在概览中隐藏评分信息'.t,
                   style: TextStyle(fontFamily: fontFamily)),
               initialValue: showRating,
             ),
@@ -117,8 +185,8 @@ class _InterfaceSettingsPageState extends State<InterfaceSettingsPage> {
                 await GStorage.putSetting(SettingsKeys.showAnimeCounter, showAnimeCounter);
                 setState(() {});
               },
-              title: Text('显示追番统计', style: TextStyle(fontFamily: fontFamily)),
-              description: Text('启用后将在追番页面下方显示追番统计',
+              title: Text('显示追番统计'.t, style: TextStyle(fontFamily: fontFamily)),
+              description: Text('启用后将在追番页面下方显示追番统计'.t,
                   style: TextStyle(fontFamily: fontFamily)),
               initialValue: showAnimeCounter,
             ),

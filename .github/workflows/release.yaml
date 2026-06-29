@@ -18,6 +18,7 @@
       KAZUMI_APPID: ${{ secrets.KAZUMI_APPID }}
       KAZUMI_KEY: ${{ secrets.KAZUMI_KEY }}
       SIGNPATH_API_TOKEN: ${{ secrets.SIGNPATH_API_TOKEN }}
+      SIGNING_KEY_BASE64: ${{ secrets.SIGNING_KEY_BASE64 }}
 
     jobs:
       flutter-test:
@@ -579,6 +580,7 @@
             run: cp linux_arm64_outputs/* .
 
           - name: Sign APK
+            if: env.SIGNING_KEY_BASE64 != ''
             id: sign_app
             uses: filippoLeporati93/android-release-signer@v1
             with:
@@ -589,8 +591,13 @@
             env:
               BUILD_TOOLS_VERSION: "34.0.0"
 
-          - name: Copy Signed android build file
+          - name: Copy Signed android build file (if signed)
+            if: env.SIGNING_KEY_BASE64 != ''
             run: cp ${{steps.sign_app.outputs.signedReleaseFile}} build/signed/Kazumi_android_${{ env.tag }}.apk
+
+          - name: Fallback copy unsigned android build file (if not signed)
+            if: env.SIGNING_KEY_BASE64 == ''
+            run: cp build/unsigned/Kazumi_android_${{ env.tag }}.apk build/signed/Kazumi_android_${{ env.tag }}.apk
 
           - name: Create release
             uses: softprops/action-gh-release@v2

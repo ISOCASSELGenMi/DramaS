@@ -10,6 +10,7 @@ import 'package:kazumi/services/auth/mal_auth_service.dart';
 import 'package:kazumi/services/sync/mal_sync_service.dart';
 import 'package:kazumi/services/storage/storage.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:kazumi/utils/translate_extension.dart';
 
 class MalEditorPage extends StatefulWidget {
   const MalEditorPage({super.key});
@@ -116,7 +117,7 @@ class _MalEditorPageState extends State<MalEditorPage> {
     return PopScope(
       canPop: !syncCollectiblesing,
       child: Scaffold(
-        appBar: const SysAppBar(title: Text('MyAnimeList 配置')),
+        appBar: SysAppBar(title: Text('MyAnimeList 配置'.t)),
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           child: Center(
@@ -126,51 +127,51 @@ class _MalEditorPageState extends State<MalEditorPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (!isLoggedIn) ...[
-                    const Text(
-                      '授權步驟：',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  Text(
+                    '授權步驟：'.t,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: malClientIdController,
+                    decoration: InputDecoration(
+                      labelText: '自訂 Client ID (可空，留空將使用預設 ID)'.t,
+                      border: const OutlineInputBorder(),
                     ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: malClientIdController,
-                      decoration: const InputDecoration(
-                        labelText: '自訂 Client ID (可空，留空將使用預設 ID)',
-                        border: OutlineInputBorder(),
-                      ),
-                      onChanged: (val) async {
-                        await GStorage.putSetting(SettingsKeys.malClientId, val.trim());
-                      },
-                    ),
+                    onChanged: (val) async {
+                      await GStorage.putSetting(SettingsKeys.malClientId, val.trim());
+                    },
+                  ),
                     const SizedBox(height: 16),
                     SizedBox(
                       width: double.infinity,
                       height: 50,
-                      child: FilledButton.icon(
-                        onPressed: () async {
-                          final url = Uri.parse(MalAuthService().getAuthorizationUrl());
-                          if (await canLaunchUrl(url)) {
-                            await launchUrl(url, mode: LaunchMode.externalApplication);
-                          } else {
-                            KazumiDialog.showToast(message: '無法開啟授權連結');
-                          }
-                        },
-                        icon: const Icon(Icons.open_in_browser_rounded),
-                        label: const Text('1. 前往 MyAnimeList 進行網頁授權'),
-                      ),
+                    child: FilledButton.icon(
+                      onPressed: () async {
+                        final url = Uri.parse(MalAuthService().getAuthorizationUrl());
+                        if (await canLaunchUrl(url)) {
+                          await launchUrl(url, mode: LaunchMode.externalApplication);
+                        } else {
+                          KazumiDialog.showToast(message: '無法開啟授權連結'.t);
+                        }
+                      },
+                      icon: const Icon(Icons.open_in_browser_rounded),
+                      label: Text('1. 前往 MyAnimeList 進行網頁授權'.t),
                     ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      '授權同意後，瀏覽器將轉跳至本地頁面（顯示無法連線是正常的）。請複製網址列中 `code=` 後方的代碼貼在下方輸入框：',
-                      style: TextStyle(fontSize: 13, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    '授權同意後，瀏覽器將轉跳至本地頁面（顯示無法連線是正常的）。請複製網址列中 `code=` 後方的代碼貼在下方輸入框：'.t,
+                    style: const TextStyle(fontSize: 13, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: authCodeController,
+                    decoration: InputDecoration(
+                      labelText: '2. 輸入網址中的 Authorization Code'.t,
+                      border: const OutlineInputBorder(),
                     ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: authCodeController,
-                      decoration: const InputDecoration(
-                        labelText: '2. 輸入網址中的 Authorization Code',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
+                  ),
                     const SizedBox(height: 16),
                     SizedBox(
                       width: double.infinity,
@@ -181,13 +182,13 @@ class _MalEditorPageState extends State<MalEditorPage> {
                             : () async {
                                 final code = authCodeController.text.trim();
                                 if (code.isEmpty) {
-                                  KazumiDialog.showToast(message: '授權碼不能為空');
+                                  KazumiDialog.showToast(message: '授權碼不能為空'.t);
                                   return;
                                 }
                                 setState(() {
                                   isVerifying = true;
                                 });
-                                KazumiDialog.showToast(message: '正在向 MAL 交換 Token...');
+                                KazumiDialog.showToast(message: '正在向 MAL 交換 Token...'.t);
                                 try {
                                   final success = await MalAuthService().exchangeCodeForToken(code);
                                   if (success) {
@@ -195,17 +196,17 @@ class _MalEditorPageState extends State<MalEditorPage> {
                                     await malSync.init();
                                     await GStorage.putSetting(SettingsKeys.malSyncEnable, true);
                                     
-                                    KazumiDialog.showToast(message: '授權成功，用戶名：${malSync.username}');
+                                    KazumiDialog.showToast(message: '${'授權成功，用戶名：'.t}${malSync.username}');
                                     if (mounted) {
                                       setState(() {
                                         _checkLoginStatus();
                                       });
                                     }
                                   } else {
-                                    KazumiDialog.showToast(message: '授權失敗，請確認代碼無誤');
+                                    KazumiDialog.showToast(message: '授權失敗，請確認代碼無誤'.t);
                                   }
                                 } catch (e) {
-                                  KazumiDialog.showToast(message: '授權出錯: ${e.toString()}');
+                                  KazumiDialog.showToast(message: '${'授權出錯: '.t}${e.toString()}');
                                 } finally {
                                   if (mounted) {
                                     setState(() {
@@ -214,7 +215,7 @@ class _MalEditorPageState extends State<MalEditorPage> {
                                   }
                                 }
                               },
-                        child: const Text('3. 驗證並登入'),
+                        child: Text('3. 驗證並登入'.t),
                       ),
                     ),
                   ] else ...[
@@ -223,17 +224,17 @@ class _MalEditorPageState extends State<MalEditorPage> {
                         leading: const CircleAvatar(
                           child: Icon(Icons.person_rounded),
                         ),
-                        title: Text('當前登入用戶：$currentUsername'),
-                        subtitle: const Text('MyAnimeList 同步已啟用'),
+                        title: Text('${'當前登入用戶：'.t}$currentUsername'),
+                        subtitle: Text('MyAnimeList 同步已啟用'.t),
                         trailing: OutlinedButton(
                           onPressed: () async {
                             await MalAuthService().clearAuth();
                             setState(() {
                               _checkLoginStatus();
                             });
-                            KazumiDialog.showToast(message: '已登出 MyAnimeList 帳號');
+                            KazumiDialog.showToast(message: '已登出 MyAnimeList 帳號'.t);
                           },
-                          child: const Text('登出'),
+                          child: Text('登出'.t),
                         ),
                       ),
                     ),
@@ -252,8 +253,8 @@ class _MalEditorPageState extends State<MalEditorPage> {
                               setState(() {});
                             }
                           },
-                          title: Text('即時同步提示', style: TextStyle(fontFamily: fontFamily)),
-                          description: Text('追番或觀看進度變更觸發即時同步時顯示提示框',
+                          title: Text('即時同步提示'.t, style: TextStyle(fontFamily: fontFamily)),
+                          description: Text('追番或觀看進度變更觸發即時同步時顯示提示框'.t,
                               style: TextStyle(fontFamily: fontFamily)),
                           initialValue: malImmediateSyncToastEnable,
                         ),
@@ -265,14 +266,14 @@ class _MalEditorPageState extends State<MalEditorPage> {
                               syncPriorityMenuController.open();
                             }
                           },
-                          title: Text('同步優先級', style: TextStyle(fontFamily: fontFamily)),
-                          description: Text('當本地與 MyAnimeList 狀態不一致時優先使用哪個狀態',
+                          title: Text('同步優先級'.t, style: TextStyle(fontFamily: fontFamily)),
+                          description: Text('當本地與 MyAnimeList 狀態不一致時優先使用哪個狀態'.t,
                               style: TextStyle(fontFamily: fontFamily)),
                           value: MenuAnchor(
                             consumeOutsideTap: true,
                             controller: syncPriorityMenuController,
                             builder: (context, controller, child) => Text(
-                              MalSyncPriority.fromValue(syncPriority).label,
+                              MalSyncPriority.fromValue(syncPriority).label.t,
                               style: TextStyle(fontFamily: fontFamily),
                             ),
                             menuChildren: [
@@ -286,7 +287,7 @@ class _MalEditorPageState extends State<MalEditorPage> {
                                     child: Align(
                                       alignment: Alignment.centerLeft,
                                       child: Text(
-                                        entry.label,
+                                        entry.label.t,
                                         style: TextStyle(
                                           color: entry.value == syncPriority
                                               ? Theme.of(context).colorScheme.primary
@@ -311,8 +312,8 @@ class _MalEditorPageState extends State<MalEditorPage> {
                           onPressed: (_) async {
                             await syncWithProgress();
                           },
-                          title: Text("立即同步狀態", style: TextStyle(fontFamily: fontFamily)),
-                          description: Text('同步狀態不一致或僅存在於本地/遠端的動漫狀態',
+                          title: Text("立即同步狀態".t, style: TextStyle(fontFamily: fontFamily)),
+                          description: Text('同步狀態不一致或僅存在於本地/遠端的動漫狀態'.t,
                               style: TextStyle(fontFamily: fontFamily)),
                         ),
                       ],
@@ -342,7 +343,7 @@ class _MalSyncProgressDialogState extends State<_MalSyncProgressDialog> {
   void update(String text, double? value) {
     if (!mounted) return;
     setState(() {
-      _progressText = text;
+      _progressText = text.t;
       _progressValue = value;
     });
   }
@@ -360,9 +361,9 @@ class _MalSyncProgressDialogState extends State<_MalSyncProgressDialog> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'MyAnimeList 同步進行中',
-                  style: TextStyle(
+                Text(
+                  'MyAnimeList 同步進行中'.t,
+                  style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),

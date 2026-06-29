@@ -7,6 +7,7 @@ class ThemeProvider extends ChangeNotifier {
   bool useDynamicColor = false;
   late ThemeData light;
   late ThemeData dark;
+  String currentLanguage = 'zh_CN';
   String? currentFontFamily = customAppFontFamily;
 
   /// Returns true if the effective theme is dark mode.
@@ -37,6 +38,11 @@ class ThemeProvider extends ChangeNotifier {
 
   void setFontFamily(bool useSystemFont, {bool notify = true}) {
     currentFontFamily = useSystemFont ? null : customAppFontFamily;
+    if (notify) notifyListeners();
+  }
+
+  void setLanguage(String lang, {bool notify = true}) {
+    currentLanguage = lang;
     if (notify) notifyListeners();
   }
 }

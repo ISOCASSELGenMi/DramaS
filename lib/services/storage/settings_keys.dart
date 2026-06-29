@@ -261,6 +261,11 @@ class SettingsKeys {
     '/tab/popular/',
     group: SettingGroup.interface,
   );
+  static const language = SettingKey<String>(
+    _SettingBoxKey.language,
+    'zh_CN',
+    group: SettingGroup.interface,
+  );
   static const isWideScreen = SettingKey<bool>(
     _SettingBoxKey.isWideScreen,
     false,
@@ -698,6 +703,7 @@ class _SettingBoxKey {
       enableBangumiProxy = 'enableBangumiProxy',
       enableSystemProxy = 'enableSystemProxy',
       defaultStartupPage = 'defaultStartupPage',
+      language = 'language',
 
       /// Deprecated
       isWideScreen = 'isWideScreen',
