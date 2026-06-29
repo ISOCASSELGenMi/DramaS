@@ -14,6 +14,7 @@ import 'package:provider/provider.dart';
 import 'package:kazumi/bean/widget/collect_button.dart';
 import 'package:kazumi/modules/collect/collect_sync_plan.dart';
 import 'package:kazumi/services/storage/storage.dart';
+import 'package:kazumi/services/logging/logger.dart';
 import 'package:kazumi/services/sync/mal_sync_service.dart';
 
 class CollectPage extends StatefulWidget {
