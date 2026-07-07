@@ -5,6 +5,7 @@ import 'package:kazumi/modules/bangumi/bangumi_item.dart';
 import 'package:kazumi/modules/collect/collect_module.dart';
 import 'package:kazumi/modules/collect/collect_type.dart';
 import 'package:kazumi/services/sync/bangumi_sync_service.dart';
+import 'package:kazumi/services/sync/myanimelist_sync_service.dart';
 import 'package:kazumi/services/storage/storage.dart';
 import 'package:kazumi/services/sync/webdav.dart';
 import 'package:kazumi/repositories/collect_crud_repository.dart';
@@ -52,6 +53,10 @@ abstract class _CollectController with Store {
     return _collectCrudRepository.getCollectible(id)?.bangumiItem;
   }
 
+  CollectedBangumi? getCollectedBangumi(int id) {
+    return _collectCrudRepository.getCollectible(id);
+  }
+
   @action
   Future<void> addCollect(BangumiItem bangumiItem, {type = 1}) async {
     if (type == 0) {
@@ -78,6 +83,7 @@ abstract class _CollectController with Store {
       action: collectChangeAction,
       type: type,
     );
+    await _syncMyAnimeListCollectIfEnabled(bangumiItem);
     loadCollectibles();
   }
 
@@ -115,6 +121,7 @@ abstract class _CollectController with Store {
       action: 3,
       type: 5,
     );
+    await _syncMyAnimeListCollectIfEnabled(bangumiItem, delete: true);
     loadCollectibles();
   }
 
@@ -214,6 +221,33 @@ abstract class _CollectController with Store {
         stackTrace: stackTrace,
       );
       return false;
+    }
+  }
+
+  Future<void> _syncMyAnimeListCollectIfEnabled(
+    BangumiItem bangumiItem, {
+    bool delete = false,
+  }) async {
+    final mal = MyAnimeListSyncService.instance;
+    if (!mal.isEnabled) {
+      return;
+    }
+
+    try {
+      final collectible = _collectCrudRepository.getCollectible(bangumiItem.id);
+      if (collectible == null && delete) {
+        return;
+      }
+      if (collectible == null) {
+        return;
+      }
+      await mal.syncCollectible(collectible);
+    } catch (e, stackTrace) {
+      KazumiLogger().w(
+        'MyAnimeList: collect sync skipped or failed for ${bangumiItem.id}',
+        error: e,
+        stackTrace: stackTrace,
+      );
     }
   }
 

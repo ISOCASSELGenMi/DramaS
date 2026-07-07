@@ -5,6 +5,7 @@ import 'package:kazumi/pages/collect/collect_controller.dart';
 import 'package:kazumi/modules/search/plugin_search_module.dart';
 import 'package:kazumi/pages/info/rating_review_dialog.dart';
 import 'package:kazumi/request/apis/bangumi_api.dart';
+import 'package:kazumi/services/sync/myanimelist_sync_service.dart';
 import 'package:mobx/mobx.dart';
 import 'package:kazumi/services/logging/logger.dart';
 import 'package:kazumi/modules/comments/comment_item.dart';
@@ -221,6 +222,13 @@ abstract class _InfoController with Store {
         tags: data.tags,
       );
       await collectController.updateLocalCollect(bangumiItem);
+      final collectible = collectController.getCollectedBangumi(bangumiItem.id);
+      if (collectible != null) {
+        await MyAnimeListSyncService.instance.syncCollectible(
+          collectible,
+          score: data.score > 0 ? data.score : null,
+        );
+      }
       await fillInterestUserProfileIfNeeded();
       _removeCurrentUserFromPublicComments();
       await refreshBangumiCommentsSilently(bangumiItem.id);

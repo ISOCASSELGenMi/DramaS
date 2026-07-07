@@ -4,6 +4,7 @@ import 'package:kazumi/pages/bangumi/bangumi_module.dart';
 import 'package:kazumi/pages/download/download_page_module.dart';
 import 'package:kazumi/pages/history/history_module.dart';
 import 'package:kazumi/pages/plugin_editor/plugin_module.dart';
+import 'package:kazumi/pages/myanimelist/myanimelist_settings_page.dart';
 import 'package:kazumi/pages/settings/danmaku/danmaku_module.dart';
 import 'package:kazumi/pages/settings/decoder_settings.dart';
 import 'package:kazumi/pages/settings/displaymode_settings.dart';
@@ -42,6 +43,10 @@ final settingsModule = createModule(
       ..route(
         '/interface',
         child: (context, state) => const InterfaceSettingsPage(),
+      )
+      ..route(
+        '/myanimelist',
+        child: (context, state) => const MyAnimeListSettingsPage(),
       )
       ..module(proxyModule)
       ..route(

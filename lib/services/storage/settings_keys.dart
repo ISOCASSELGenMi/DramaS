@@ -421,6 +421,21 @@ class SettingsKeys {
     false,
     group: SettingGroup.interface,
   );
+  static const appLanguage = SettingKey<String>(
+    _SettingBoxKey.appLanguage,
+    'zh-Hans',
+    group: SettingGroup.interface,
+  );
+  static const malEnabled = SettingKey<bool>(
+    _SettingBoxKey.malEnabled,
+    false,
+    group: SettingGroup.sync,
+  );
+  static const malAccessToken = SettingKey<String>(
+    _SettingBoxKey.malAccessToken,
+    '',
+    group: SettingGroup.sync,
+  );
   static const downloadParallelEpisodes = SettingKey<int>(
     _SettingBoxKey.downloadParallelEpisodes,
     2,
@@ -574,6 +589,9 @@ class SettingsKeys {
     proxyTestUrl,
     showRating,
     showAnimeCounter,
+    appLanguage,
+    malEnabled,
+    malAccessToken,
     downloadParallelEpisodes,
     downloadParallelSegments,
     downloadDanmaku,
@@ -684,6 +702,9 @@ class _SettingBoxKey {
       proxyTestUrl = 'proxyTestUrl',
       showRating = 'showRating',
       showAnimeCounter = 'showAnimeCounter',
+      appLanguage = 'appLanguage',
+      malEnabled = 'malEnabled',
+      malAccessToken = 'malAccessToken',
       downloadParallelEpisodes = 'downloadParallelEpisodes',
       downloadParallelSegments = 'downloadParallelSegments',
       downloadDanmaku = 'downloadDanmaku',

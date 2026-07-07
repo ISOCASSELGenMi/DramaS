@@ -4,6 +4,7 @@ import 'package:card_settings_ui/tile/settings_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:kazumi/bean/appbar/sys_app_bar.dart';
 import 'package:kazumi/services/storage/storage.dart';
+import 'package:kazumi/utils/app_localizations.dart';
 
 class InterfaceSettingsPage extends StatefulWidget {
   const InterfaceSettingsPage({super.key});
@@ -16,13 +17,21 @@ class _InterfaceSettingsPageState extends State<InterfaceSettingsPage> {
   late bool showRating;
   late bool showAnimeCounter;
   late String defaultPage;
+  late String appLanguage;
   final MenuController defaultPageMenuController = MenuController();
+  final MenuController languageMenuController = MenuController();
 
   static const Map<String, String> defaultPageMap = {
-    '/tab/popular/': '推荐',
-    '/tab/timeline/': '时间表',
-    '/tab/collect/': '追番',
-    '/tab/my/': '我的',
+    '/tab/popular/': 'popular',
+    '/tab/timeline/': 'timeline',
+    '/tab/collect/': 'collect',
+    '/tab/my/': 'my',
+  };
+
+  static const Map<String, String> languageMap = {
+    'zh-Hans': 'language_zh_hans',
+    'zh-Hant': 'language_zh_hant',
+    'en': 'language_en',
   };
 
   @override
@@ -31,6 +40,8 @@ class _InterfaceSettingsPageState extends State<InterfaceSettingsPage> {
     showRating = GStorage.getSetting(SettingsKeys.showRating);
     showAnimeCounter = GStorage.getSetting(SettingsKeys.showAnimeCounter);
     defaultPage = GStorage.getSetting(SettingsKeys.defaultStartupPage);
+    appLanguage = GStorage.getSetting(SettingsKeys.appLanguage);
+    AppLocaleController.instance.initialize();
   }
 
   void updateDefaultPage(String page) {
@@ -40,13 +51,25 @@ class _InterfaceSettingsPageState extends State<InterfaceSettingsPage> {
     });
   }
 
+  Future<void> updateAppLanguage(String language) async {
+    await GStorage.putSetting(SettingsKeys.appLanguage, language);
+    await AppLocaleController.instance.setLocale(AppLocaleController.resolveLocale(language));
+    if (!mounted) return;
+    setState(() {
+      appLanguage = language;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final fontFamily = Theme.of(context).textTheme.bodyMedium?.fontFamily;
 
+    final localizedTitle = KazumiLocalizations.translate('interface_settings_title', locale: AppLocaleController.instance.currentLocale);
+    final defaultPageLabel = KazumiLocalizations.translate('common_${defaultPageMap[defaultPage] ?? 'recommended'}', locale: AppLocaleController.instance.currentLocale);
+
     return Scaffold(
       appBar: SysAppBar(
-        title: Text('界面设置'),
+        title: Text(localizedTitle),
       ),
       body: SettingsList(
         sections: [
@@ -59,15 +82,15 @@ class _InterfaceSettingsPageState extends State<InterfaceSettingsPage> {
                   defaultPageMenuController.open();
                 }
               },
-              title: Text('启动界面设置', style: TextStyle(fontFamily: fontFamily)),
-              description: Text('设置应用开启时的默认页面',
+              title: Text(KazumiLocalizations.translate('interface_settings_default_page', locale: AppLocaleController.instance.currentLocale), style: TextStyle(fontFamily: fontFamily)),
+              description: Text(KazumiLocalizations.translate('interface_settings_default_page_description', locale: AppLocaleController.instance.currentLocale),
                   style: TextStyle(fontFamily: fontFamily)),
               value: MenuAnchor(
                 consumeOutsideTap: true,
                 controller: defaultPageMenuController,
                 builder: (_, __, ___) {
                   return Text(
-                    defaultPageMap[defaultPage] ?? '推荐',
+                    KazumiLocalizations.translate('common_${defaultPageMap[defaultPage] ?? 'recommended'}', locale: AppLocaleController.instance.currentLocale),
                     style: TextStyle(fontFamily: fontFamily),
                   );
                 },
@@ -82,7 +105,7 @@ class _InterfaceSettingsPageState extends State<InterfaceSettingsPage> {
                         child: Align(
                           alignment: Alignment.centerLeft,
                           child: Text(
-                            entry.value,
+                            KazumiLocalizations.translate('common_${entry.value}', locale: AppLocaleController.instance.currentLocale),
                             style: TextStyle(
                               color: entry.key == defaultPage
                                   ? Theme.of(context).colorScheme.primary
@@ -104,8 +127,8 @@ class _InterfaceSettingsPageState extends State<InterfaceSettingsPage> {
                 await GStorage.putSetting(SettingsKeys.showRating, showRating);
                 setState(() {});
               },
-              title: Text('显示评分', style: TextStyle(fontFamily: fontFamily)),
-              description: Text('关闭后将在概览中隐藏评分信息',
+              title: Text(KazumiLocalizations.translate('interface_settings_show_rating', locale: AppLocaleController.instance.currentLocale), style: TextStyle(fontFamily: fontFamily)),
+              description: Text(KazumiLocalizations.translate('interface_settings_show_rating_description', locale: AppLocaleController.instance.currentLocale),
                   style: TextStyle(fontFamily: fontFamily)),
               initialValue: showRating,
             ),
@@ -117,10 +140,56 @@ class _InterfaceSettingsPageState extends State<InterfaceSettingsPage> {
                 await GStorage.putSetting(SettingsKeys.showAnimeCounter, showAnimeCounter);
                 setState(() {});
               },
-              title: Text('显示追番统计', style: TextStyle(fontFamily: fontFamily)),
-              description: Text('启用后将在追番页面下方显示追番统计',
+              title: Text(KazumiLocalizations.translate('interface_settings_show_anime_counter', locale: AppLocaleController.instance.currentLocale), style: TextStyle(fontFamily: fontFamily)),
+              description: Text(KazumiLocalizations.translate('interface_settings_show_anime_counter_description', locale: AppLocaleController.instance.currentLocale),
                   style: TextStyle(fontFamily: fontFamily)),
               initialValue: showAnimeCounter,
+            ),
+          ]),
+          SettingsSection(tiles: [
+            SettingsTile.navigation(
+              onPressed: (_) async {
+                if (languageMenuController.isOpen) {
+                  languageMenuController.close();
+                } else {
+                  languageMenuController.open();
+                }
+              },
+              title: Text(KazumiLocalizations.translate('interface_settings_language', locale: AppLocaleController.instance.currentLocale), style: TextStyle(fontFamily: fontFamily)),
+              description: Text(KazumiLocalizations.translate('interface_settings_language_description', locale: AppLocaleController.instance.currentLocale), style: TextStyle(fontFamily: fontFamily)),
+              value: MenuAnchor(
+                consumeOutsideTap: true,
+                controller: languageMenuController,
+                builder: (_, __, ___) {
+                  return Text(
+                    KazumiLocalizations.translate(languageMap[appLanguage] ?? 'language_zh_hans', locale: AppLocaleController.instance.currentLocale),
+                    style: TextStyle(fontFamily: fontFamily),
+                  );
+                },
+                menuChildren: [
+                  for (final entry in languageMap.entries)
+                    MenuItemButton(
+                      requestFocusOnHover: false,
+                      onPressed: () async => updateAppLanguage(entry.key),
+                      child: Container(
+                        height: 48,
+                        constraints: BoxConstraints(minWidth: 112),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            KazumiLocalizations.translate(entry.value, locale: AppLocaleController.instance.currentLocale),
+                            style: TextStyle(
+                              color: entry.key == appLanguage
+                                  ? Theme.of(context).colorScheme.primary
+                                  : null,
+                              fontFamily: fontFamily,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
           ]),
         ],

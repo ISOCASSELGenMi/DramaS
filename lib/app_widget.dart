@@ -14,6 +14,7 @@ import 'package:kazumi/navigation.dart';
 import 'package:kazumi/utils/constants.dart';
 import 'package:kazumi/utils/device.dart';
 import 'package:kazumi/utils/theme.dart';
+import 'package:kazumi/utils/app_localizations.dart';
 
 class AppWidget extends StatefulWidget {
   const AppWidget({super.key});
@@ -35,6 +36,8 @@ class _AppWidgetState extends State<AppWidget>
     trayManager.addListener(this);
     windowManager.addListener(this);
     WidgetsBinding.instance.addObserver(this);
+    AppLocaleController.instance.addListener(_handleLocaleChanged);
+    AppLocaleController.instance.initialize();
     _initializePlatformIntegrations();
   }
 
@@ -71,10 +74,17 @@ class _AppWidgetState extends State<AppWidget>
 
   @override
   void dispose() {
+    AppLocaleController.instance.removeListener(_handleLocaleChanged);
     trayManager.removeListener(this);
     windowManager.removeListener(this);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  void _handleLocaleChanged() {
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override
@@ -336,11 +346,11 @@ class _AppWidgetState extends State<AppWidget>
           title: "Kazumi",
           localizationsDelegates: GlobalMaterialLocalizations.delegates,
           supportedLocales: const [
-            Locale.fromSubtags(
-                languageCode: 'zh', scriptCode: 'Hans', countryCode: "CN")
+            Locale('zh', 'CN'),
+            Locale('zh', 'TW'),
+            Locale('en'),
           ],
-          locale: const Locale.fromSubtags(
-              languageCode: 'zh', scriptCode: 'Hans', countryCode: "CN"),
+          locale: AppLocaleController.instance.currentLocale,
           theme: lightTheme,
           darkTheme: effectiveDarkTheme,
           themeMode: themeProvider.themeMode,

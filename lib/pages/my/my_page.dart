@@ -148,6 +148,14 @@ class _MyPageState extends State<MyPage> {
                   description:
                       Text('设置同步参数', style: TextStyle(fontFamily: fontFamily)),
                 ),
+                SettingsTile.navigation(
+                  onPressed: (_) {
+                    context.pushNamed('/settings/myanimelist');
+                  },
+                  leading: const Icon(Icons.sync_alt_rounded),
+                  title: Text('MyAnimeList', style: TextStyle(fontFamily: fontFamily)),
+                  description: Text('配置 MyAnimeList 同步', style: TextStyle(fontFamily: fontFamily)),
+                ),
               ],
             ),
             SettingsSection(

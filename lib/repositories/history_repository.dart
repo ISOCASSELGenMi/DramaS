@@ -3,6 +3,7 @@ import 'package:kazumi/services/storage/storage.dart';
 import 'package:kazumi/modules/bangumi/bangumi_item.dart';
 import 'package:kazumi/modules/history/history_module.dart';
 import 'package:kazumi/services/sync/history_sync_service.dart';
+import 'package:kazumi/services/sync/myanimelist_sync_service.dart';
 import 'package:kazumi/services/logging/logger.dart';
 import 'package:kazumi/services/storage/history_storage_coordinator.dart';
 
@@ -282,6 +283,7 @@ class HistoryRepository implements IHistoryRepository {
           progressMs: progress.inMilliseconds,
           updatedAt: nowMs,
         );
+        await _syncMyAnimeListProgress(history, episode);
       } catch (e, stackTrace) {
         KazumiLogger().e(
           'GStorage: update history failed. bangumi=${identity.bangumiItem.name}, episode=${identity.episodeNumber}',
@@ -290,6 +292,23 @@ class HistoryRepository implements IHistoryRepository {
         );
       }
     });
+  }
+
+  Future<void> _syncMyAnimeListProgress(History history, int episode) async {
+    final mal = MyAnimeListSyncService.instance;
+    if (!mal.isEnabled) {
+      return;
+    }
+
+    final collectible = GStorage.collectibles.get(history.bangumiItem.id);
+    if (collectible == null) {
+      return;
+    }
+
+    await mal.syncCollectible(
+      collectible,
+      watchedEpisodes: episode,
+    );
   }
 
   @override
